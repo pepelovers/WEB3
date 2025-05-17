@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEPE Token Login</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #c1f0c1;
+            color: #116611;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,100,0,0.2);
+            border: 3px solid #2ecc40;
+        }
+        h1 {
+            color: #01a001;
+            text-align: center;
+        }
+        .login-button {
+            display: block;
+            width: 250px;
+            margin: 30px auto;
+            padding: 15px 30px;
+            background-color: #2ecc40;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login-button:hover {
+            background-color: #01a001;
+        }
+        .login-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .wallet-info {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e8f4f8;
+            border-radius: 5px;
+            border: 2px dashed #2ecc40;
+        }
+        .address {
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 14px;
+        }
+        .token-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #d1ffd1;
+            border-radius: 5px;
+            color: #333;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .success {
+            color: green;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .checking {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+        }
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            font-size: 12px;
+            text-align: left;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .pepe-logo {
+            width: 100px;
+            height: auto;
+        }
+        .logout-button {
+            display: block;
+            width: 200px;
+            margin: 20px auto 10px;
+            padding: 12px 25px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .logout-button:hover {
+            background-color: #e05050;
+        }
+        /* Login Popup Styles */
+        .login-popup {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .popup-content {
+            position: relative;
+            background-color: #d1ffd1;
+            margin: 15% auto;
+            padding: 30px;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 20px;
+            border: 5px solid #2ecc40;
+            box-shadow: 0 8px 30px rgba(0, 100, 0, 0.3);
+            text-align: center;
+        }
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: #116611;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .popup-balance {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            background-color: #e8ffe8;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #2ecc40;
+        }
+        .popup-pepe-icon {
+            width: 60px;
+            height: 60px;
+            margin-right: 20px;
+        }
+        .popup-balance-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #01a001;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo-container">
+        <img src="./pepelover.jpg" alt="PEPE Coin" class="pepe-logo">
+    </div>
+    <h1>PEPE Token Login</h1>
+
+    <button id="loginButton" class="login-button">
+        Login with Metamask
+    </button>
+
+    <div id="checkingMessage" class="checking" style="display: none;">
+        Checking PEPE token balance...
+    </div>
+
+    <div id="walletInfo" class="wallet-info" style="display: none;">
+        <h3>Connected Wallet Info</h3>
+        <p>Address: <span id="walletAddress" class="address"></span></p>
+        <p>Chain ID: <span id="chainId"></span></p>
+        <div class="token-info">
+            <p>PEPE Token Balance: <span id="tokenBalance"></span></p>
+            <p>Contract: <span id="contractAddress" class="address">0x6982508145454Ce325dDbE47a25d4ec3d2311933</span></p>
+        </div>
+        <div id="debugInfo" class="debug-info" style="display: none;">
+            <p>Debug Info:</p>
+            <p>Raw Balance: <span id="rawBalance"></span></p>
+            <p>Decimals: <span id="decimals"></span></p>
+            <p>Network: <span id="network"></span></p>
+        </div>
+        <button id="logoutButton" class="logout-button">
+            Logout
+        </button>
+    </div>
+
+    <div id="message" class="error"></div>
+</div>
+
+<!-- Login Popup -->
+<div id="loginPopup" class="login-popup">
+    <div class="popup-content">
+        <span class="close-popup">&times;</span>
+        <h2>Welcome PEPE Holder!</h2>
+        <div class="popup-balance">
+            <img src="./pepelover.jpg" alt="PEPE" class="popup-pepe-icon">
+            <div>
+                <p>Your PEPE Balance:</p>
+                <p class="popup-balance-amount"><span id="popupTokenBalance"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentAccount = null;
+    // PEPE token contract address
+    const TOKEN_CONTRACT_ADDRESS = '0x6982508145454Ce325dDbE47a25d4ec3d2311933';
+    const MINIMUM_TOKEN_BALANCE = 10; // Minimum required token balance
+
+    // Check if Metamask is installed
+    function checkMetamask() {
+        if (typeof window.ethereum === 'undefined') {
+            showMessage('Metamask is not installed. Please install it from the Chrome Web Store!', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    // Display message function
+    function showMessage(message, type = 'error') {
+        const messageEl = document.getElementById('message');
+        messageEl.textContent = message;
+        messageEl.className = type;
+        setTimeout(() => {
+            messageEl.textContent = '';
+        }, 5000);
+    }
+
+    // Convert hex to decimal
+    function hexToNumber(hex) {
+        return parseInt(hex, 16);
+    }
+
+    // Get token balance function (using eth_call)
+    async function getTokenBalance(address) {
+        try {
+            // Encoded data for balanceOf(address) function
+            const balanceOfData = '0x70a08231' + address.slice(2).padStart(64, '0');
+
+            // Query token balance
+            const balance = await window.ethereum.request({
+                method: 'eth_call',
+                params: [{
+                    to: TOKEN_CONTRACT_ADDRESS,
+                    data: balanceOfData
+                }, 'latest']
+            });
+
+            // Query decimals
+            const decimalsData = '0x313ce567'; // decimals() function signature
+
+            const decimalsHex = await window.ethereum.request({
+                method: 'eth_call',
+                params: [{
+                    to: TOKEN_CONTRACT_ADDRESS,
+                    data: decimalsData
+                }, 'latest']
+            });
+
+            const decimals = hexToNumber(decimalsHex);
+            const rawBalance = hexToNumber(balance);
+            const actualBalance = rawBalance / (10 ** decimals);
+
+            // Display debug info
+            document.getElementById('rawBalance').textContent = rawBalance;
+            document.getElementById('decimals').textContent = decimals;
+            document.getElementById('debugInfo').style.display = 'block';
+
+            console.log('PEPE Token Balance Results:', {
+                address,
+                balance: balance,
+                decimals: decimals,
+                rawBalance: rawBalance,
+                actualBalance: actualBalance
+            });
+
+            return actualBalance;
+        } catch (error) {
+            console.error('Token Balance Query Error:', error);
+
+            // Show error debug info
+            showMessage('Error checking PEPE token balance: ' + error.message, 'error');
+
+            return 0;
+        }
+    }
+
+    // Get network information
+    async function getNetworkInfo() {
+        try {
+            const chainId = await window.ethereum.request({
+                method: 'eth_chainId'
+            });
+
+            const networks = {
+                '0x1': 'Ethereum Mainnet',
+                '0x5': 'Goerli Testnet',
+                '0xaa36a7': 'Sepolia Testnet',
+                '0x89': 'Polygon Mainnet',
+                '0x38': 'BSC Mainnet',
+                '0x13881': 'Mumbai Testnet'
+            };
+
+            return networks[chainId] || `Unknown (${chainId})`;
+        } catch (error) {
+            return 'Unknown';
+        }
+    }
+
+    // Show login popup
+    function showLoginPopup(tokenBalance) {
+        const popup = document.getElementById('loginPopup');
+        const popupBalance = document.getElementById('popupTokenBalance');
+
+        popupBalance.textContent = `${tokenBalance.toFixed(6)}`;
+        popup.style.display = 'block';
+
+        // Close popup when clicking on X
+        const closeButton = document.querySelector('.close-popup');
+        closeButton.onclick = function() {
+            popup.style.display = 'none';
+        }
+
+        // Close popup when clicking outside
+        window.onclick = function(event) {
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        }
+
+        // Auto close after 5 seconds
+        setTimeout(() => {
+            popup.style.display = 'none';
+        }, 5000);
+    }
+
+    // Connect wallet function
+    async function connectWallet() {
+        if (!checkMetamask()) return;
+
+        const checkingEl = document.getElementById('checkingMessage');
+        const loginButton = document.getElementById('loginButton');
+
+        try {
+            loginButton.disabled = true;
+            checkingEl.style.display = 'block';
+
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+
+            if (accounts.length > 0) {
+                currentAccount = accounts[0];
+                const chainId = await window.ethereum.request({
+                    method: 'eth_chainId'
+                });
+
+                // Check network info
+                const network = await getNetworkInfo();
+                document.getElementById('network').textContent = network;
+
+                // Check PEPE token balance
+                const tokenBalance = await getTokenBalance(currentAccount);
+
+                checkingEl.style.display = 'none';
+
+                if (tokenBalance >= MINIMUM_TOKEN_BALANCE) {
+                    // Sufficient token balance, proceed with login
+                    updateUI(true, currentAccount, chainId, tokenBalance);
+                    await authenticateUser(currentAccount, tokenBalance);
+
+                    // Show login popup with balance
+                    showLoginPopup(tokenBalance);
+                } else {
+                    // Insufficient token balance
+                    updateUI(true, currentAccount, chainId, tokenBalance); // Show UI for debugging
+                    showMessage(`Insufficient PEPE tokens! You need at least ${MINIMUM_TOKEN_BALANCE} tokens. (Current: ${tokenBalance.toFixed(6)})`, 'error');
+
+                    // Show debug info
+                    console.log('Token shortage details:', {
+                        required: MINIMUM_TOKEN_BALANCE,
+                        actual: tokenBalance,
+                        address: currentAccount,
+                        contract: TOKEN_CONTRACT_ADDRESS
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Wallet connection error:', error);
+            showMessage('Failed to connect wallet: ' + error.message, 'error');
+            checkingEl.style.display = 'none';
+            loginButton.disabled = false;
+        }
+    }
+
+    // User authentication
+    async function authenticateUser(address, tokenBalance) {
+        try {
+            // Message for signature request
+            const message = `PEPE Token Login Request\nAddress: ${address}\nPEPE Token Balance: ${tokenBalance}\nTime: ${new Date().toISOString()}`;
+
+            // Request signature from user
+            const signature = await window.ethereum.request({
+                method: 'personal_sign',
+                params: [message, address]
+            });
+
+            showMessage('Login successful!', 'success');
+
+            // Save session
+            localStorage.setItem('walletAddress', address);
+            localStorage.setItem('tokenBalance', tokenBalance);
+            localStorage.setItem('pepeLogin', 'true');
+
+        } catch (error) {
+            console.error('Authentication error:', error);
+            showMessage('Authentication failed: ' + error.message);
+        }
+    }
+
+    // Update UI
+    function updateUI(connected, address = '', chainId = '', tokenBalance = 0) {
+        const loginButton = document.getElementById('loginButton');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddress = document.getElementById('walletAddress');
+        const chainIdEl = document.getElementById('chainId');
+        const tokenBalanceEl = document.getElementById('tokenBalance');
+
+        if (connected) {
+            loginButton.style.display = 'none';
+            walletInfo.style.display = 'block';
+            walletAddress.textContent = address;
+            chainIdEl.textContent = parseInt(chainId, 16);
+            tokenBalanceEl.textContent = `${tokenBalance.toFixed(6)}`;
+        } else {
+            loginButton.style.display = 'block';
+            walletInfo.style.display = 'none';
+            loginButton.disabled = false;
+        }
+    }
+
+    // Logout
+    function logout() {
+        currentAccount = null;
+        localStorage.removeItem('walletAddress');
+        localStorage.removeItem('tokenBalance');
+        localStorage.removeItem('pepeLogin');
+        updateUI(false);
+        showMessage('Successfully logged out', 'success');
+    }
+
+    // Detect account changes
+    if (window.ethereum) {
+        window.ethereum.on('accountsChanged', (accounts) => {
+            if (accounts.length === 0) {
+                logout();
+            } else if (accounts[0] !== currentAccount) {
+                currentAccount = accounts[0];
+                connectWallet();
+            }
+        });
+
+        // Detect chain changes
+        window.ethereum.on('chainChanged', (chainId) => {
+            window.location.reload();
+        });
+    }
+
+    // Event listeners
+    document.getElementById('loginButton').addEventListener('click', connectWallet);
+    document.getElementById('logoutButton').addEventListener('click', logout);
+
+    // Check saved session on page load
+    window.addEventListener('load', async () => {
+        const savedAddress = localStorage.getItem('walletAddress');
+        const isPepeLogin = localStorage.getItem('pepeLogin') === 'true';
+
+        if (savedAddress && isPepeLogin && checkMetamask()) {
+            try {
+                const accounts = await window.ethereum.request({
+                    method: 'eth_accounts'
+                });
+
+                if (accounts.includes(savedAddress)) {
+                    // Re-check token balance
+                    const tokenBalance = await getTokenBalance(savedAddress);
+
+                    if (tokenBalance >= MINIMUM_TOKEN_BALANCE) {
+                        currentAccount = savedAddress;
+                        const chainId = await window.ethereum.request({
+                            method: 'eth_chainId'
+                        });
+                        updateUI(true, savedAddress, chainId, tokenBalance);
+                    } else {
+                        // Token balance is insufficient, log out
+                        logout();
+                        showMessage(`Logged out automatically due to insufficient PEPE tokens. (Current: ${tokenBalance.toFixed(6)})`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Session restoration error:', error);
+            }
+        }
+    });
+</script>
+</body>
+</html>
